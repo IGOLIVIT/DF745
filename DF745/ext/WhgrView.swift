@@ -239,17 +239,27 @@ class WController: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let cookieJar = HTTPCookieStorage.shared
         
         if let cookies = cookieJar.cookies {
-            let data = NSKeyedArchiver.archivedData(withRootObject: cookies)
-            UserDefaults.standard.set(data, forKey: "cookie")
+            do {
+                let data = try NSKeyedArchiver.archivedData(withRootObject: cookies, requiringSecureCoding: false)
+                UserDefaults.standard.set(data, forKey: "cookie")
+            } catch {
+                print("Failed to save cookies: \(error)")
+            }
         }
     }
     
     func loadCookie() {
         let ud = UserDefaults.standard
         
-        if let data = ud.object(forKey: "cookie") as? Data, let cookies = NSKeyedUnarchiver.unarchiveObject(with: data) as? [HTTPCookie] {
-            for cookie in cookies {
-                HTTPCookieStorage.shared.setCookie(cookie)
+        if let data = ud.object(forKey: "cookie") as? Data {
+            do {
+                if let cookies = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? [HTTPCookie] {
+                    for cookie in cookies {
+                        HTTPCookieStorage.shared.setCookie(cookie)
+                    }
+                }
+            } catch {
+                print("Failed to load cookies: \(error)")
             }
         }
     }
@@ -275,8 +285,12 @@ class SSLDelegate: NSObject, URLSessionDelegate {
     
     func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         
-        // Принимаем любые сертификаты (только для разработки!)
-        completionHandler(.useCredential, URLCredential(trust: challenge.protectionSpace.serverTrust!))
+        guard let serverTrust = challenge.protectionSpace.serverTrust else {
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+        
+        completionHandler(.useCredential, URLCredential(trust: serverTrust))
     }
 }
 

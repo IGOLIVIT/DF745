@@ -260,6 +260,7 @@ struct StreakIllustration: View {
 struct ChoiceIllustration: View {
     @State private var selectedPath: Int? = nil
     @State private var glowOpacity: Double = 0.5
+    @State private var animationTimer: Timer? = nil
     
     var body: some View {
         ZStack {
@@ -290,10 +291,15 @@ struct ChoiceIllustration: View {
                 glowOpacity = 1.0
             }
         }
+        .onDisappear {
+            animationTimer?.invalidate()
+            animationTimer = nil
+        }
     }
     
     private func startPathAnimation() {
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+        animationTimer?.invalidate()
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
             withAnimation(.easeInOut(duration: 0.3)) {
                 selectedPath = Int.random(in: 0..<9)
             }
@@ -308,4 +314,5 @@ struct ScaleButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
+
 

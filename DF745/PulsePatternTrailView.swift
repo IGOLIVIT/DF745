@@ -12,6 +12,7 @@ struct PulsePatternTrailView: View {
     @State private var sessionReward = 0
     @State private var shakePad: Int? = nil
     @State private var showSummary = false
+    @State private var sequenceTimer: Timer? = nil
     
     let padCount = 6
     let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
@@ -47,6 +48,8 @@ struct PulsePatternTrailView: View {
             }
         }
         .onDisappear {
+            sequenceTimer?.invalidate()
+            sequenceTimer = nil
             if gameState != .finished {
                 gameState = .ready
             }
@@ -57,6 +60,10 @@ struct PulsePatternTrailView: View {
             sequence = []
             userSequence = []
             sessionReward = 0
+            highlightedPad = nil
+            shakePad = nil
+            sequenceTimer?.invalidate()
+            sequenceTimer = nil
         }) {
             SessionSummaryView(
                 title: currentRound > statsStore.bestPulsePatternTrailLength ? "New Record!" : "Great Focus!",
@@ -222,7 +229,8 @@ struct PulsePatternTrailView: View {
         var index = 0
         highlightedPad = nil
         
-        Timer.scheduledTimer(withTimeInterval: 0.8, repeats: true) { timer in
+        sequenceTimer?.invalidate()
+        sequenceTimer = Timer.scheduledTimer(withTimeInterval: 0.8, repeats: true) { timer in
             if index < sequence.count {
                 highlightedPad = sequence[index]
                 
@@ -233,6 +241,7 @@ struct PulsePatternTrailView: View {
                 index += 1
             } else {
                 timer.invalidate()
+                sequenceTimer = nil
                 isShowingSequence = false
                 gameState = .userTurn
             }
@@ -272,6 +281,8 @@ struct PulsePatternTrailView: View {
         
         gameState = .finished
         highlightedPad = nil
+        sequenceTimer?.invalidate()
+        sequenceTimer = nil
         
         statsStore.recordSession(type: "PulsePatternTrail", score: currentRound, reward: sessionReward)
         

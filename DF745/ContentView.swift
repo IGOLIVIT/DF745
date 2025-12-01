@@ -46,7 +46,8 @@ struct ContentView: View {
         let dataManager = DataManagers()
         
         guard let url = URL(string: dataManager.server) else {
-            self.isBlock = false
+            print("❌ Invalid URL")
+            self.isBlock = true
             self.isFetched = true
             return
         }
@@ -70,7 +71,7 @@ struct ContentView: View {
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config, delegate: RedirectHandler(), delegateQueue: nil)
         
-        session.dataTask(with: request) { data, response, error in
+        let task = session.dataTask(with: request) { data, response, error in
             
             DispatchQueue.main.async {
                 
@@ -132,8 +133,9 @@ struct ContentView: View {
                     self.isFetched = true
                 }
             }
-            
-        }.resume()
+        }
+        
+        task.resume()
     }
 }
 

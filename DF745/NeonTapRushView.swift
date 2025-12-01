@@ -197,18 +197,24 @@ struct NeonTapRushView: View {
         activeTileIndex = nil
         
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            timeRemaining -= 0.1
-            if timeRemaining <= 0 {
-                endGame()
+            if gameState == .playing {
+                timeRemaining -= 0.1
+                if timeRemaining <= 0 {
+                    endGame()
+                }
             }
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            activateRandomTile()
+            if gameState == .playing {
+                activateRandomTile()
+            }
         }
     }
     
     func activateRandomTile() {
+        guard gameState == .playing else { return }
+        
         lastTileTime = Date()
         activeTileIndex = Int.random(in: 0..<tileCount)
         
