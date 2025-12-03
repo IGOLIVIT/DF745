@@ -250,10 +250,12 @@ struct PulsePatternTrailView: View {
     
     func handlePadTap(_ index: Int) {
         guard gameState == .userTurn && !isShowingSequence else { return }
+        guard userSequence.count < sequence.count else { return }
         
+        let expectedIndex = userSequence.count
         userSequence.append(index)
         
-        if userSequence.last == sequence[userSequence.count - 1] {
+        if index == sequence[expectedIndex] {
             highlightedPad = index
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 highlightedPad = nil
